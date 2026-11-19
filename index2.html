@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Minimal Utility Suite</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --background: #1e1e1e;
+      --panel: #2c2c2c;
+      --buttons: #484848;
+      --red: #df5252;
+      --orange: #ff9800;
+      --green: #28a745;
+      --white: #ffffff;
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--background);
+      color: var(--white);
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 440px;
+      text-align: center;
+    }
+
+    .mode-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .mode-btn {
+      background: var(--panel);
+      color: #bbb;
+      border: 1px solid #444;
+      border-radius: 12px;
+      padding: 12px 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .mode-btn:hover {
+      color: var(--white);
+      border-color: #666;
+    }
+
+    .mode-btn.active {
+      background: var(--orange);
+      color: var(--white);
+      border-color: var(--orange);
+    }
+
+    .tool-view {
+      display: none;
+    }
+
+    .tool-view.active {
+      display: block;
+    }
+
+    h1 {
+      font-size: 38px;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      color: #888;
+      font-size: 11px;
+      letter-spacing: 3px;
+      margin-bottom: 28px;
+    }
+
+    .panel {
+      background: var(--panel);
+      padding: 25px;
+      border-radius: 22px;
+      box-shadow: 0 12px 35px #0005;
+    }
+
+    .display {
+      background: var(--white);
+      color: var(--background);
+      border-radius: 14px;
+      padding: 24px 14px 18px;
+    }
+
+    .time,
+    .calc-screen {
+      font-size: clamp(28px, 7vw, 42px);
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -1px;
+      word-break: break-all;
+    }
+
+    .calc-screen {
+      width: 100%;
+      border: none;
+      background: transparent;
+      color: var(--background);
+      text-align: right;
+      font-family: Arial, sans-serif;
+    }
+
+    .calc-screen:focus {
+      outline: none;
+    }
+
+    .time-label {
+      display: block;
+      margin-top: 10px;
+      color: #777;
+      font-size: 10px;
+      letter-spacing: 2px;
+    }
+
+    .calc-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 22px 0 18px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 12px;
+      padding: 16px 8px;
+      color: var(--white);
+      background: var(--buttons);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .btn:hover:not(:disabled) {
+      filter: brightness(1.12);
+      transform: translateY(-2px);
+    }
+
+    .btn:active:not(:disabled) {
+      transform: scale(0.96);
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .op-btn {
+      background: #5a5a5a;
+    }
+
+    .reset {
+      background: var(--red);
+    }
+
+    .start {
+      background: var(--green);
+    }
+
+    .lap,
+    .eq-btn {
+      background: var(--orange);
+    }
+
+    .inputs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .input-box {
+      background: var(--buttons);
+      border-radius: 10px;
+      padding: 10px 8px;
+    }
+
+    .input-box label {
+      display: block;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      color: #ccc;
+      margin-bottom: 6px;
+    }
+
+    .input-box input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: var(--white);
+      text-align: center;
+      font-size: 18px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .input-box input:focus {
+      outline: none;
+    }
+
+    .status {
+      margin-top: 6px;
+      min-height: 20px;
+      font-size: 13px;
+      color: #ccc;
+    }
+
+    .laps-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #555;
+      padding-bottom: 12px;
+    }
+
+    .laps-header h2 {
+      font-size: 17px;
+    }
+
+    #sw-clear-laps {
+      background: none;
+      border: none;
+      color: #bbb;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    #sw-clear-laps:hover {
+      color: var(--white);
+    }
+
+    .laps {
+      list-style: none;
+      margin-top: 13px;
+      max-height: 220px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .lap-row {
+      display: flex;
+      justify-content: space-between;
+      background: var(--buttons);
+      padding: 14px;
+      border-radius: 9px;
+      font-size: 14px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .empty {
+      color: #999;
+      padding: 20px 0;
+      font-size: 14px;
+    }
+
+    footer {
+      color: #777;
+      font-size: 10px;
+      letter-spacing: 2px;
+      margin-top: 25px;
+    }
+
+    footer span {
+      color: var(--orange);
+    }
+
+    button:focus-visible {
+      outline: 2px solid var(--white);
+      outline-offset: 3px;
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <nav class="mode-bar" aria-label="Tool selector">
+      <button type="button" class="mode-btn active" data-target="calc-view">Calculator</button>
+      <button type="button" class="mode-btn" data-target="timer-view">Timer</button>
+      <button type="button" class="mode-btn" data-target="stopwatch-view">Stopwatch</button>
+    </nav>
+
+    <!-- 1. Calculator -->
+    <section id="calc-view" class="tool-view active">
+      <h1>Calculator</h1>
+      <p class="subtitle">QUICK ARITHMETIC</p>
+      <div class="panel">
+        <div class="display">
+          <input type="text" id="calc-screen" class="calc-screen" value="0" readonly />
+          <span class="time-label">EXPRESSION &amp; RESULT</span>
+        </div>
+        <div class="calc-grid">
+          <button type="button" class="btn reset" onclick="calcClear()">C</button>
+          <button type="button" class="btn op-btn" onclick="calcBackspace()">DEL</button>
+          <button type="button" class="btn op-btn" onclick="calcAppend('%')">%</button>
+          <button type="button" class="btn op-btn" onclick="calcAppend('&#247;')">&#247;</button>
+
+          <button type="button" class="btn" onclick="calcAppend('7')">7</button>
+          <button type="button" class="btn" onclick="calcAppend('8')">8</button>
+          <button type="button" class="btn" onclick="calcAppend('9')">9</button>
+          <button type="button" class="btn op-btn" onclick="calcAppend('*')">*</button>
+
+          <button type="button" class="btn" onclick="calcAppend('4')">4</button>
+          <button type="button" class="btn" onclick="calcAppend('5')">5</button>
+          <button type="button" class="btn" onclick="calcAppend('6')">6</button>
+          <button type="button" class="btn op-btn" onclick="calcAppend('-')">-</button>
+
+          <button type="button" class="btn" onclick="calcAppend('1')">1</button>
+          <button type="button" class="btn" onclick="calcAppend('2')">2</button>
+          <button type="button" class="btn" onclick="calcAppend('3')">3</button>
+          <button type="button" class="btn op-btn" onclick="calcAppend('+')">+</button>
+
+          <button type="button" class="btn" onclick="calcAppend('0')">0</button>
+          <button type="button" class="btn" onclick="calcAppend('.')">.</button>
+          <button type="button" class="btn eq-btn" style="grid-column: span 2;" onclick="calcSolve()">=</button>
+        </div>
+      </div>
+      <footer>MINIMAL SUITE <span>•</span> CALCULATOR</footer>
+    </section>
+
+    <!-- 2. Timer -->
+    <section id="timer-view" class="tool-view">
+      <h1>Timer</h1>
+      <p class="subtitle">COUNT DOWN YOUR FOCUS</p>
+      <div class="panel">
+        <div class="display">
+          <span class="time" id="tm-display">00:05:00.00</span>
+          <span class="time-label">HH : MM : SS . MS</span>
+        </div>
+
+        <div class="inputs">
+          <div class="input-box">
+            <label for="tm-hours">HOURS</label>
+            <input type="number" id="tm-hours" min="0" max="99" value="0" />
+          </div>
+          <div class="input-box">
+            <label for="tm-minutes">MINUTES</label>
+            <input type="number" id="tm-minutes" min="0" max="59" value="5" />
+          </div>
+          <div class="input-box">
+            <label for="tm-seconds">SECONDS</label>
+            <input type="number" id="tm-seconds" min="0" max="59" value="0" />
+          </div>
+        </div>
+
+        <div class="controls">
+          <button type="button" class="btn reset" id="tm-reset">Reset</button>
+          <button type="button" class="btn start" id="tm-start">Start</button>
+          <button type="button" class="btn lap" id="tm-plus">+1 Min</button>
+        </div>
+
+        <p class="status" id="tm-status">Set a duration and press Start.</p>
+      </div>
+      <footer>MINIMAL SUITE <span>•</span> TIMER</footer>
+    </section>
+
+    <!-- 3. Stopwatch -->
+    <section id="stopwatch-view" class="tool-view">
+      <h1>Stopwatch</h1>
+      <p class="subtitle">TIME YOUR MOMENTS</p>
+      <div class="panel">
+        <div class="display">
+          <span class="time" id="sw-display">00:00:00.00</span>
+          <span class="time-label">HH : MM : SS . MS</span>
+        </div>
+
+        <div class="controls">
+          <button type="button" class="btn reset" id="sw-reset">Reset</button>
+          <button type="button" class="btn start" id="sw-start">Start</button>
+          <button type="button" class="btn lap" id="sw-lap" disabled>Lap</button>
+        </div>
+
+        <div class="laps-header">
+          <h2>Lap Times</h2>
+          <button type="button" id="sw-clear-laps">Clear all</button>
+        </div>
+
+        <ol class="laps" id="sw-laps">
+          <li class="empty">Your lap times will appear here.</li>
+        </ol>
+      </div>
+      <footer>MINIMAL SUITE <span>•</span> STOPWATCH</footer>
+    </section>
+  </main>
+
+  <script>
+    // Mode switching
+    const modeButtons = document.querySelectorAll(".mode-btn");
+    const toolViews = document.querySelectorAll(".tool-view");
+
+    modeButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const targetId = btn.dataset.target;
+        modeButtons.forEach((b) => b.classList.toggle("active", b === btn));
+        toolViews.forEach((v) => v.classList.toggle("active", v.id === targetId));
+      });
+    });
+
+    // Shared HH:MM:SS.CC formatter
+    function formatTime(ms) {
+      const safeMs = Math.max(0, ms);
+      const total = Math.floor(safeMs / 10);
+      const hours = Math.floor(total / 360000);
+      const minutes = Math.floor(total / 6000) % 60;
+      const seconds = Math.floor(total / 100) % 60;
+      const centiseconds = total % 100;
+      const pad = (n) => String(n).padStart(2, "0");
+      return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}.${pad(centiseconds)}`;
+    }
+
+    // 1. Calculator logic
+    const calcScreen = document.getElementById("calc-screen");
+    let calcResetNext = false;
+
+    function calcAppend(token) {
+      if (calcResetNext && !["+", "-", "*", "/", "%"].includes(token)) {
+        calcScreen.value = "";
+      }
+      calcResetNext = false;
+      if (calcScreen.value === "0" && !["+", "-", "*", "/", "%", "."].includes(token)) {
+        calcScreen.value = token;
+      } else {
+        calcScreen.value += token;
+      }
+    }
+
+    function calcClear() {
+      calcScreen.value = "0";
+      calcResetNext = false;
+    }
+
+    function calcBackspace() {
+      if (calcScreen.value.length <= 1 || calcScreen.value === "Error") {
+        calcScreen.value = "0";
+      } else {
+        calcScreen.value = calcScreen.value.slice(0, -1);
+      }
+    }
+
+    function calcSolve() {
+      const sanitized = calcScreen.value.replace(/[^0-9+\-*/.%() ]/g, "");
+      try {
+        const result = Function(`"use strict"; return (${sanitized})`)();
+        calcScreen.value = Number.isFinite(result) ? String(result) : "Error";
+      } catch {
+        calcScreen.value = "Error";
+      }
+      calcResetNext = true;
+    }
+
+    // 2. Timer logic
+    const tmDisplay = document.getElementById("tm-display");
+    const tmHours = document.getElementById("tm-hours");
+    const tmMinutes = document.getElementById("tm-minutes");
+    const tmSeconds = document.getElementById("tm-seconds");
+    const tmStartBtn = document.getElementById("tm-start");
+    const tmResetBtn = document.getElementById("tm-reset");
+    const tmPlusBtn = document.getElementById("tm-plus");
+    const tmStatus = document.getElementById("tm-status");
+
+    let tmRemainingMs = 5 * 60 * 1000;
+    let tmEndTime = 0;
+    let tmRunning = false;
+    let tmFrame;
+
+    function tmGetInputMs() {
+      const h = Math.max(0, Number(tmHours.value) || 0);
+      const m = Math.max(0, Number(tmMinutes.value) || 0);
+      const s = Math.max(0, Number(tmSeconds.value) || 0);
+      return ((h * 3600) + (m * 60) + s) * 1000;
+    }
+
+    function tmSyncInputs() {
+      if (tmRunning) return;
+      tmRemainingMs = tmGetInputMs();
+      tmDisplay.textContent = formatTime(tmRemainingMs);
+      tmStatus.textContent = tmRemainingMs > 0 ? "Ready to start." : "Enter a duration above 0.";
+    }
+
+    function tmTick() {
+      if (!tmRunning) return;
+      tmRemainingMs = Math.max(0, tmEndTime - performance.now());
+      tmDisplay.textContent = formatTime(tmRemainingMs);
+
+      if (tmRemainingMs <= 0) {
+        tmRunning = false;
+        cancelAnimationFrame(tmFrame);
+        tmStartBtn.textContent = "Start";
+        tmStartBtn.style.background = "var(--green)";
+        tmStatus.textContent = "Time is up!";
+        return;
+      }
+      tmFrame = requestAnimationFrame(tmTick);
+    }
+
+    function tmToggle() {
+      if (tmRunning) {
+        tmRemainingMs = Math.max(0, tmEndTime - performance.now());
+        tmRunning = false;
+        cancelAnimationFrame(tmFrame);
+        tmDisplay.textContent = formatTime(tmRemainingMs);
+        tmStartBtn.textContent = "Resume";
+        tmStartBtn.style.background = "var(--green)";
+        tmStatus.textContent = "Paused.";
+      } else {
+        if (tmRemainingMs <= 0) tmRemainingMs = tmGetInputMs();
+        if (tmRemainingMs <= 0) {
+          tmStatus.textContent = "Set hours, minutes, or seconds first.";
+          return;
+        }
+        tmEndTime = performance.now() + tmRemainingMs;
+        tmRunning = true;
+        tmStartBtn.textContent = "Pause";
+        tmStartBtn.style.background = "var(--red)";
+        tmStatus.textContent = "Counting down...";
+        tmTick();
+      }
+    }
+
+    function tmReset() {
+      tmRunning = false;
+      cancelAnimationFrame(tmFrame);
+      tmRemainingMs = tmGetInputMs();
+      tmDisplay.textContent = formatTime(tmRemainingMs);
+      tmStartBtn.textContent = "Start";
+      tmStartBtn.style.background = "var(--green)";
+      tmStatus.textContent = "Reset to input duration.";
+    }
+
+    function tmAddMinute() {
+      tmRemainingMs += 60 * 1000;
+      if (tmRunning) {
+        tmEndTime += 60 * 1000;
+      } else {
+        tmDisplay.textContent = formatTime(tmRemainingMs);
+      }
+      tmStatus.textContent = "Added 1 minute.";
+    }
+
+    tmHours.addEventListener("input", tmSyncInputs);
+    tmMinutes.addEventListener("input", tmSyncInputs);
+    tmSeconds.addEventListener("input", tmSyncInputs);
+    tmStartBtn.addEventListener("click", tmToggle);
+    tmResetBtn.addEventListener("click", tmReset);
+    tmPlusBtn.addEventListener("click", tmAddMinute);
+
+    // 3. Stopwatch logic
+    const swDisplay = document.getElementById("sw-display");
+    const swStartBtn = document.getElementById("sw-start");
+    const swResetBtn = document.getElementById("sw-reset");
+    const swLapBtn = document.getElementById("sw-lap");
+    const swClearBtn = document.getElementById("sw-clear-laps");
+    const swLapsList = document.getElementById("sw-laps");
+
+    let swStartTime = 0;
+    let swElapsed = 0;
+    let swPrevLap = 0;
+    let swLapCount = 0;
+    let swRunning = false;
+    let swFrame;
+
+    function swGetElapsed() {
+      return swElapsed + (performance.now() - swStartTime);
+    }
+
+    function swUpdate() {
+      swDisplay.textContent = formatTime(swGetElapsed());
+      if (swRunning) swFrame = requestAnimationFrame(swUpdate);
+    }
+
+    function swToggle() {
+      if (swRunning) {
+        swElapsed = swGetElapsed();
+        swRunning = false;
+        cancelAnimationFrame(swFrame);
+        swDisplay.textContent = formatTime(swElapsed);
+        swStartBtn.textContent = "Resume";
+        swStartBtn.style.background = "var(--green)";
+        swLapBtn.disabled = true;
+      } else {
+        swStartTime = performance.now();
+        swRunning = true;
+        swStartBtn.textContent = "Pause";
+        swStartBtn.style.background = "var(--red)";
+        swLapBtn.disabled = false;
+        swUpdate();
+      }
+    }
+
+    function swReset() {
+      swRunning = false;
+      cancelAnimationFrame(swFrame);
+      swElapsed = 0;
+      swStartTime = 0;
+      swPrevLap = 0;
+      swLapCount = 0;
+      swDisplay.textContent = "00:00:00.00";
+      swStartBtn.textContent = "Start";
+      swStartBtn.style.background = "var(--green)";
+      swLapBtn.disabled = true;
+      swLapsList.innerHTML = '<li class="empty">Your lap times will appear here.</li>';
+    }
+
+    function swRecordLap() {
+      if (!swRunning) return;
+      const nowElapsed = swGetElapsed();
+      const lapDuration = nowElapsed - swPrevLap;
+      swPrevLap = nowElapsed;
+      swLapCount++;
+      if (swLapCount === 1) swLapsList.innerHTML = "";
+      const li = document.createElement("li");
+      li.className = "lap-row";
+      const label = document.createElement("span");
+      label.textContent = `Lap ${swLapCount}`;
+      const val = document.createElement("span");
+      val.textContent = formatTime(lapDuration);
+      li.append(label, val);
+      swLapsList.prepend(li);
+    }
+
+    function swClearLaps() {
+      swLapCount = 0;
+      swPrevLap = swRunning ? swGetElapsed() : swElapsed;
+      swLapsList.innerHTML = '<li class="empty">Your lap times will appear here.</li>';
+    }
+
+    swStartBtn.addEventListener("click", swToggle);
+    swResetBtn.addEventListener("click", swReset);
+    swLapBtn.addEventListener("click", swRecordLap);
+    swClearBtn.addEventListener("click", swClearLaps);
+  </script>
+</body>
+</html>
